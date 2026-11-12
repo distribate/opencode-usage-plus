@@ -28,6 +28,9 @@ bundle:
 	/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $(VERSION)" "$(BUNDLE_PATH)/Contents/Info.plist"
 	/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $(VERSION)" "$(BUNDLE_PATH)/Contents/Info.plist"
 	cp Sources/OpencodeUsage/Resources/opencode-logo.png "$(BUNDLE_PATH)/Contents/Resources/opencode-logo.png"
+	@if [ -d ".build/$(CONFIG)/OpencodeUsage_OpencodeUsage.bundle" ]; then \
+		cp -R ".build/$(CONFIG)/OpencodeUsage_OpencodeUsage.bundle" "$(BUNDLE_PATH)/Contents/Resources/"; \
+	fi
 	codesign --force --sign - "$(BUNDLE_PATH)"
 
 run: build
