@@ -10,9 +10,6 @@ let package = Package(
         .executableTarget(
             name: "OpencodeUsage",
             path: "Sources/OpencodeUsage",
-            resources: [
-                .copy("Resources/opencode-logo.png"),
-            ],
             linkerSettings: [
                 .linkedLibrary("sqlite3"),
             ]

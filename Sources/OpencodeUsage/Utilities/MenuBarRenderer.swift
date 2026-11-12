@@ -20,7 +20,7 @@ enum MenuBarRenderer {
     /// Template image loaded once from the bundled `opencode-logo.png`,
     /// falling back to an SF Symbol if the asset is missing.
     private static let logoImage: NSImage = {
-        let url = Bundle.module.url(forResource: "opencode-logo", withExtension: "png")
+        let url = Bundle.main.url(forResource: "opencode-logo", withExtension: "png")
         let img = url.flatMap { NSImage(contentsOf: $0) }
             ?? NSImage(systemSymbolName: "bolt.fill", accessibilityDescription: "OpenCode")
             ?? NSImage()
