@@ -32,3 +32,42 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "${{ github.ref_name }}" "OpenCode Usage Plus.dmg" --title "${{ github.ref_name }}" --generate-notes
+
+  windows:
+    name: Windows tray
+    # The macOS job creates the release; the asset is attached to it afterwards.
+    needs: release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Version from tag
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}" -replace '^v', ''
+          "APP_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Publish single-file exe
+        working-directory: windows
+        run: >
+          dotnet publish src/OpenCodeUsagePlus -c Release -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:PublishTrimmed=false
+          -p:DebugType=none
+          -p:Version=${{ env.APP_VERSION }}
+          -o publish
+
+      - name: Zip
+        working-directory: windows
+        run: Compress-Archive -Path publish\OpenCodeUsagePlus.exe -DestinationPath OpenCodeUsagePlus-windows-x64.zip -Force
+
+      - name: Upload asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.ref_name }}" windows/OpenCodeUsagePlus-windows-x64.zip --clobber

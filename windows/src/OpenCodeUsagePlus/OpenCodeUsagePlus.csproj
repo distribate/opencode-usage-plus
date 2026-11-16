@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <RootNamespace>OpenCodeUsagePlus</RootNamespace>
+    <AssemblyName>OpenCodeUsagePlus</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Resources\app.ico</ApplicationIcon>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <Version>0.1.0</Version>
+    <Product>OpenCode Usage Plus</Product>
+    <Description>OpenCode Go usage monitor in the Windows tray</Description>
+    <Authors>distribate contributors</Authors>
+    <RepositoryUrl>https://github.com/distribate/opencode-usage-plus</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Copyright>MIT — see LICENSE</Copyright>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <!-- DPI comes from the manifest (PerMonitorV2) because the WPF window needs it too; the
+         WinForms analyzer only looks at Application.SetHighDpiMode. -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OpenCodeUsagePlus.Core\OpenCodeUsagePlus.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Resources\app.ico" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

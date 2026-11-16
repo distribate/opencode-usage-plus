@@ -6,3 +6,13 @@ DerivedData/
 *.swp
 *.swo
 .swiftpm/
+
+# Windows port (.NET)
+windows/**/bin/
+windows/**/obj/
+windows/publish/
+windows/artifacts/
+windows/**/*.user
+.vs/
+
+windows/*.zip

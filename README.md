@@ -6,6 +6,10 @@ A native macOS menu bar app that monitors your
 [OpenCode Go](https://opencode.ai/docs/console/go/) subscription usage
 (rolling 5-hour, weekly and monthly windows).
 
+The same repository ships a **Windows tray app** (`windows/`) with the same
+API, credential discovery and history format. See
+[windows/README.md](windows/README.md).
+
 This is a fork of [wiscaksono/opencode-usage](https://github.com/wiscaksono/opencode-usage)
 with two additions:
 
@@ -26,6 +30,22 @@ with two additions:
 - **Auto-Refresh**: every 5 minutes, plus a manual refresh button.
 - **Lightweight**: background agent (`LSUIElement`), no dock icon.
 - **Terminal-Driven**: plain SwiftPM + Makefile, no `.xcodeproj`.
+
+## Windows tray app
+
+`windows/` contains a .NET 8 / WPF port for Windows 10 and 11:
+
+- tray icon (progress ring, three bars or bolt) and a flyout with the same three
+  windows, reset countdowns and 24-hour sparkline;
+- reads the same `opencode.db` credential on the Windows data path and keeps the
+  same `history.json` shape;
+- left click opens the flyout, right click the menu, autostart via `HKCU\...\Run`.
+
+Download `OpenCodeUsagePlus-windows-x64.zip` from
+[Releases](https://github.com/distribate/opencode-usage-plus/releases) — it is a
+self-contained single executable. Build instructions and limits are in
+[windows/README.md](windows/README.md); the shared contract lives in
+[docs/port-spec.md](docs/port-spec.md).
 
 ## Prerequisites
 
@@ -75,16 +95,32 @@ Usage history is stored in
 | `make logs` | Stream unified logs for `com.distribate.opencode-usage-plus` |
 | `make dmg` | Release build + `.dmg` |
 
-CI runs on `macos-26`: formatting, tests, then `make build`. Pushing a `v*`
-tag runs the release workflow and publishes a `.dmg`.
+Windows (from `windows/`):
+
+| Command | What it does |
+|---|---|
+| `dotnet build` | Build the core, WPF shell and tests |
+| `dotnet test` | Run the core tests (any OS) |
+| `dotnet run --project src/OpenCodeUsagePlus` | Launch the tray app (Windows only) |
+| `dotnet publish ... -o publish` | Self-contained single-file exe |
+
+CI runs on `macos-26` (formatting, tests, `make build`, `make dmg`) and on
+`windows-latest` (build + tests + publish). Pushing a `v*` tag runs the release
+workflow and publishes both the `.dmg` and the Windows `.zip`.
 
 ## Releases
 
-Pre-built `.dmg` images are published on every version tag in
-[Releases](https://github.com/distribate/opencode-usage-plus/releases).
+Pre-built artifacts are published on every version tag in
+[Releases](https://github.com/distribate/opencode-usage-plus/releases):
 
-The app is ad-hoc signed (no paid Developer Program), so Gatekeeper may warn
+- `OpenCode Usage Plus.dmg` — macOS;
+- `OpenCodeUsagePlus-windows-x64.zip` — Windows 10/11 x64, self-contained.
+
+The macOS app is ad-hoc signed (no paid Developer Program), so Gatekeeper may warn
 on first launch: right-click the app → **Open** once.
+
+The Windows build is unsigned as well; SmartScreen may warn — **More info** →
+**Run anyway**.
 
 ## Credits
 
