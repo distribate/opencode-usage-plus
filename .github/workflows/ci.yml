@@ -49,6 +49,15 @@ jobs:
       - name: Build
         run: dotnet build -c Release
 
+      - name: Guard against invariant globalization
+        shell: pwsh
+        run: |
+          $config = "src/OpenCodeUsagePlus/bin/Release/net8.0-windows/OpenCodeUsagePlus.runtimeconfig.json"
+          $invariant = (Get-Content $config -Raw | ConvertFrom-Json).runtimeOptions.configProperties.'System.Globalization.Invariant'
+          if ($invariant -eq $true) {
+            throw "InvariantGlobalization=true breaks WPF bindings (XmlLanguage.GetSpecificCulture). See windows/Directory.Build.props."
+          }
+
       - name: Test
         run: dotnet test -c Release --no-build
 
