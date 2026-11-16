@@ -3,7 +3,12 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <InvariantGlobalization>true</InvariantGlobalization>
+    <!--
+      Do NOT enable InvariantGlobalization: WPF resolves XmlLanguage("en-US") for every binding and
+      throws "Cannot find non-neutral culture related to 'en-us'" when only the invariant culture
+      exists. On Windows the non-invariant mode uses NLS and does not add ICU to the build.
+    -->
+    <InvariantGlobalization>false</InvariantGlobalization>
     <Deterministic>true</Deterministic>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
