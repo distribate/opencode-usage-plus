@@ -6,6 +6,9 @@ Guidance for AI coding agents working in this repository.
 
 OpenCode Usage Plus — a native macOS menu bar app (SwiftUI) that monitors OpenCode Go subscription usage (rolling, weekly, monthly limits) via `https://opencode.ai/zen/go/v1/usage`.
 
+The repository also ships a Windows 10/11 tray port under `windows/` (.NET 8 + WPF, same API,
+credential discovery and history format).
+
 - Pure SwiftPM package. There is no `.xcodeproj` and no xcodegen — do not introduce one.
 - Swift 6 with strict concurrency enabled. Deployment target: macOS 26 (requires Xcode 26+).
 - Single executable target (`OpencodeUsage`) + test target (`OpencodeUsageTests`).
@@ -49,6 +52,34 @@ Storage split: user preferences live in `UserDefaults` via `AppSettings`; the AP
 
 The app bundle is assembled manually by the Makefile `bundle` target: binary from `.build/`, plist from `Support/Info.plist`, logo PNG from SwiftPM resources. Version strings are stamped from git tags at bundle time.
 
+## Windows port
+
+```
+windows/
+  src/OpenCodeUsagePlus.Core/   models, API client, opencode.db access, history, settings (net8.0)
+  src/OpenCodeUsagePlus/        WPF shell: NotifyIcon host, flyout, tray icon renderer, autostart
+  tests/OpenCodeUsagePlus.Tests xUnit; runs on any OS
+  docs/test-checklist.md        manual desktop checks for Windows
+  packaging/installer.iss       Inno Setup (per-user)
+  tools/make_icon.py            regenerates Resources/app.ico
+docs/port-spec.md               shared API / credential / history contract — update it with both apps
+```
+
+| Task | Command |
+|---|---|
+| Build + test | `cd windows && dotnet build && dotnet test` |
+| Run (Windows) | `dotnet run --project src/OpenCodeUsagePlus` |
+| Self-contained exe | `dotnet publish src/OpenCodeUsagePlus -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishTrimmed=false -o publish` |
+| Regenerate icon | `python3 windows/tools/make_icon.py` |
+
+The Windows solution builds and tests on macOS because `EnableWindowsTargeting=true`; the WPF
+shell itself only runs on Windows. Do not add WPF/PresentationFramework types to
+`OpenCodeUsagePlus.Core` — the core must stay `net8.0` so its tests run everywhere.
+
+Secrets: the API key lives in DPAPI (`%LOCALAPPDATA%\OpenCode Usage Plus\apikey.bin`), the OAuth
+token is read read-only from OpenCode's database and never persisted or logged. History is
+`%LOCALAPPDATA%\OpenCode Usage Plus\history.json`, same JSON shape as macOS.
+
 ## Conventions
 
 - Swift Testing (`import Testing`, `#expect`, `@Test`), not XCTest.
@@ -72,5 +103,8 @@ This repo ships a project skill at `.agents/skills/sosumi/SKILL.md` (plus `skill
 - The data-protection Keychain probe with legacy fallback in `KeychainStore` is intentional — ad-hoc signed builds can lack DP-keychain entitlements. Do not remove it.
 - App version comes only from git tags (`vX.Y.Z`). Untagged builds stamp `0.0.0`. Never hardcode versions in `Support/Info.plist`; never bump versions manually.
 - Releases are published exclusively by pushing a tag: `git tag vX.Y.Z && git push origin vX.Y.Z`. The release workflow re-runs lint + tests before building and publishing the dmg.
+- The Windows job in the same release workflow runs **after** the macOS job created the release; it uploads `OpenCodeUsagePlus-windows-x64.zip` with `gh release upload --clobber`. Keep that ordering (`needs:`), otherwise the upload races the release creation.
+- The Windows exe is signed ad-hoc (not at all). Keep `PublishTrimmed=false`; WPF does not support trimming. Keep `IncludeNativeLibrariesForSelfExtract=true` so `e_sqlite3` works from the single file.
+- Do not rename `%LOCALAPPDATA%\OpenCode Usage Plus` casually: it holds the DPAPI key, history and log.
 - The app is ad-hoc signed on purpose (no paid Developer Program). Do not add entitlements casually — it changes Keychain behavior and Gatekeeper handling.
 - CI runs on `macos-26` GitHub runners (lint → test → build). Keep workflows compatible with that image.
