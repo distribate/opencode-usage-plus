@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace OpenCodeUsagePlus.Core.Storage;
 
 /// <summary>
@@ -13,8 +15,9 @@ public static class AppLog
 
     public static void Warn(string message) => Write("WARN", message);
 
+    /// <summary>Writes the full exception, stack trace included, so a crash report is actionable.</summary>
     public static void Error(string message, Exception? exception = null) =>
-        Write("ERROR", exception is null ? message : $"{message}: {exception.GetType().Name}: {exception.Message}");
+        Write("ERROR", exception is null ? message : $"{message}{Environment.NewLine}{exception}");
 
     private static void Write(string level, string message)
     {
@@ -30,8 +33,9 @@ public static class AppLog
                     File.Move(AppPaths.LogFile, AppPaths.LogFile + ".old", overwrite: true);
                 }
 
-                var line = $"{DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss.fff} {level} {message}{Environment.NewLine}";
-                File.AppendAllText(AppPaths.LogFile, line);
+                var text = message.Replace("\r\n", "\n").TrimEnd('\n');
+                var line = $"{DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss.fff} {level} {text}{Environment.NewLine}";
+                File.AppendAllText(AppPaths.LogFile, line, Encoding.UTF8);
             }
         }
         catch

@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
@@ -26,12 +27,33 @@ public partial class FlyoutWindow : Window
         ThemePalette.Refresh();
         ThemePalette.Apply(Resources);
 
+        if (AppEnvironment.PlainWindow)
+        {
+            // Diagnostic mode: a normal layered-free window without the shadow effect. Used to
+            // isolate WPF/GPU rendering crashes on Windows 11.
+            AllowsTransparency = false;
+            if (Resources["WindowBrush"] is System.Windows.Media.Brush brush)
+            {
+                Background = brush;
+            }
+
+            RootBorder.Effect = null;
+            RootBorder.CornerRadius = new CornerRadius(0);
+            RootBorder.BorderThickness = new Thickness(0);
+            RootBorder.Margin = new Thickness(0);
+        }
+
         var version = typeof(FlyoutWindow).Assembly.GetName().Version;
         VersionText.Text = version is null ? string.Empty : $"v{version.ToString(3)}";
 
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
         Loaded += (_, _) => SyncSelection();
+        Closing += OnClosing;
+
+        AppLog.Info($"flyout: constructed plain={AppEnvironment.PlainWindow}");
     }
+
+    private bool AllowClose { get; set; }
 
     public DateTime LastHiddenUtc { get; private set; } = DateTime.MinValue;
 
@@ -55,6 +77,10 @@ public partial class FlyoutWindow : Window
         Left = x;
         Top = y;
 
+        AppLog.Info(
+            $"flyout: show cursor=({cursorPhysical.X},{cursorPhysical.Y}) " +
+            $"size={Width:F0}x{Height:F0} at=({x},{y})");
+
         Show();
         Activate();
 
@@ -69,6 +95,24 @@ public partial class FlyoutWindow : Window
         ThemePalette.Refresh();
         ThemePalette.Apply(Resources);
         InvalidateVisual();
+    }
+
+    /// <summary>Only the tray's Quit path may destroy the window; Alt+F4 just hides it.</summary>
+    public void CloseForExit()
+    {
+        AllowClose = true;
+        Close();
+    }
+
+    private void OnClosing(object? sender, CancelEventArgs e)
+    {
+        if (AllowClose)
+        {
+            return;
+        }
+
+        e.Cancel = true;
+        HideFlyout();
     }
 
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -98,10 +142,14 @@ public partial class FlyoutWindow : Window
         {
             root.Measure(new Size(Width, double.PositiveInfinity));
             var desired = root.DesiredSize.Height;
-            if (desired > 0)
+            if (desired > 0 && double.IsFinite(desired))
             {
                 Height = Math.Clamp(desired, MinHeight, 620);
             }
+        }
+        catch (Exception exception)
+        {
+            AppLog.Error("flyout: height measurement failed", exception);
         }
         finally
         {
@@ -149,6 +197,7 @@ public partial class FlyoutWindow : Window
             return;
         }
 
+        AppLog.Info("flyout: hide");
         LastHiddenUtc = DateTime.UtcNow;
         Hide();
     }

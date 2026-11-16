@@ -38,6 +38,18 @@ public sealed class UsageBar : FrameworkElement
 
     protected override void OnRender(DrawingContext drawingContext)
     {
+        try
+        {
+            Render(drawingContext);
+        }
+        catch (Exception exception)
+        {
+            Core.Storage.AppLog.Error("usage bar: render failed", exception);
+        }
+    }
+
+    private void Render(DrawingContext drawingContext)
+    {
         var width = ActualWidth;
         var height = ActualHeight;
         if (width <= 0 || height <= 0)
@@ -53,7 +65,7 @@ public sealed class UsageBar : FrameworkElement
             radius,
             radius);
 
-        var fraction = Math.Clamp(Percent, 0, 100) / 100.0;
+        var fraction = double.IsFinite(Percent) ? Math.Clamp(Percent, 0, 100) / 100.0 : 0;
         if (fraction <= 0)
         {
             return;

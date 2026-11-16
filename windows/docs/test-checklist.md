@@ -51,3 +51,10 @@ dotnet publish src/OpenCodeUsagePlus -c Release -r win-x64 --self-contained true
 - [ ] `OpenCodeUsagePlus.exe` starts on a clean Windows 10 1809 VM without .NET installed.
 - [ ] Inno Setup installer installs per-user, creates a Start Menu shortcut, uninstalls cleanly.
 - [ ] SmartScreen warning is documented in the README (unsigned build).
+
+## Diagnostics
+
+- [ ] `OpenCodeUsagePlus.exe --diagnose` opens `diagnose-*.txt` with a credential and a live API result.
+- [ ] `OpenCodeUsagePlus.exe --safe-mode` renders the flyout without transparency and does not crash.
+- [ ] Killing the process / triggering an error leaves `crash-*.txt` with a stack trace and `log.txt` ends mid-sequence only on native faults.
+- [ ] `log.txt` starts with `start version=... plainWindow=...` on every launch.

@@ -65,6 +65,20 @@ contract shared with the macOS app.
 - The flyout closes on focus loss or `Esc`.
 - Windows 11 hides new tray icons by default — drag the icon out of the `^` overflow once.
 
+## Troubleshooting
+
+Both modes are ordinary command-line flags on the exe:
+
+| Flag | What it does |
+|---|---|
+| `--diagnose` | Writes `diagnose-<time>.txt` to `%LOCALAPPDATA%\OpenCode Usage Plus` and opens it: version, OS, window mode, settings, database candidates, credential kind/source (never the token), history, one live API call and the last 60 log lines. |
+| `--safe-mode` | Renders the flyout as a plain window without transparency, rounded corners or drop shadow. Use it to check whether a crash is compositor/GPU related. Also available as `OPENCODE_USAGE_PLAIN_WINDOW=1`. |
+
+Unhandled errors produce `crash-<time>.txt` next to `log.txt` with the full stack trace and a
+message box. Native faults (no managed exception) only leave the log; the last line before the
+silence tells where it died. Attach that file — and the Event Viewer entry under Windows Logs →
+Application (`.NET Runtime` or `Application Error`) — to a bug report.
+
 ## Layout
 
 ```
