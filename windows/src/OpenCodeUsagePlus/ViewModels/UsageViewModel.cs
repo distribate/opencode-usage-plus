@@ -339,11 +339,13 @@ public sealed class UsageViewModel : INotifyPropertyChanged, IDisposable
             {
                 _credential = null;
                 NeedsSetup = true;
+                AppLog.Info("refresh: no credential available");
                 return;
             }
 
             _credential = credential;
             NeedsSetup = false;
+            AppLog.Info($"refresh: fetching usage with {credential.Kind} credential");
 
             var stats = await _api.FetchAsync(credential).ConfigureAwait(true);
             Stats = stats;
@@ -356,7 +358,8 @@ public sealed class UsageViewModel : INotifyPropertyChanged, IDisposable
             _historyStore.Save(samples);
 
             AppLog.Info(
-                $"usage updated: rolling={stats.Rolling.DisplayPercent}% weekly={stats.Weekly.DisplayPercent}% monthly={stats.Monthly.DisplayPercent}%");
+                $"usage updated: rolling={stats.Rolling.DisplayPercent}% weekly={stats.Weekly.DisplayPercent}% monthly={stats.Monthly.DisplayPercent}% " +
+                $"history={samples.Count}");
         }
         catch (UsageApiException ex)
         {

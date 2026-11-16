@@ -45,7 +45,11 @@ internal static class TrayIconRenderer
         return ToIcon(bitmap);
     }
 
-    public static Color ColorForLevel(double percent) => UsageLevels.FromPercent(percent) switch
+    /// <summary>NaN/Infinity would reach GDI+ and fail there; clamp everything at the boundary.</summary>
+    private static double Sanitize(double percent) =>
+        double.IsFinite(percent) ? Math.Clamp(percent, 0, 100) : 0;
+
+    public static Color ColorForLevel(double percent) => UsageLevels.FromPercent(Sanitize(percent)) switch
     {
         UsageLevel.Safe => Safe,
         UsageLevel.Elevated => Elevated,
@@ -74,7 +78,7 @@ internal static class TrayIconRenderer
             return;
         }
 
-        var percent = Math.Clamp(stats.MaxPercent, 0, 100);
+        var percent = Sanitize(stats.MaxPercent);
         if (percent <= 0)
         {
             return;
@@ -102,15 +106,16 @@ internal static class TrayIconRenderer
             : new[] { stats.Rolling.Percent, stats.Weekly.Percent, stats.Monthly.Percent };
 
         using var trackBrush = new SolidBrush(TrackColor(lightTaskbar));
-        foreach (var value in values)
+        foreach (var rawValue in values)
         {
+            var value = Sanitize(rawValue);
             var barRect = new RectangleF(padding, y, width, barHeight);
             using (var track = Rounded(barRect, barHeight / 2f))
             {
                 graphics.FillPath(trackBrush, track);
             }
 
-            var filled = (float)(width * (Math.Clamp(value, 0, 100) / 100.0));
+            var filled = (float)(width * (value / 100.0));
             if (filled > 0.4f)
             {
                 filled = Math.Max(filled, barHeight);
@@ -176,7 +181,8 @@ internal static class TrayIconRenderer
         var handle = bitmap.GetHicon();
         if (handle == IntPtr.Zero)
         {
-            return SystemIcons.Application;
+            // Never hand out the shared SystemIcons instance: the caller disposes old icons.
+            return (Icon)SystemIcons.Application.Clone();
         }
 
         try

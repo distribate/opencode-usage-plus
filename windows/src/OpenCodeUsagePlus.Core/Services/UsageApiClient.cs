@@ -131,7 +131,8 @@ public sealed class UsageApiClient : IDisposable
         }
     }
 
-    private static UsageItem Map(UsageMeterDto dto) => new(dto.Status ?? "ok", dto.Percent, dto.ResetsAt);
+    private static UsageItem Map(UsageMeterDto dto) =>
+        new(dto.Status ?? "ok", double.IsFinite(dto.Percent) ? dto.Percent : 0, dto.ResetsAt);
 
     private static async Task<string> SafeReadAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {

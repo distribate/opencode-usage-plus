@@ -53,6 +53,18 @@ public sealed class Sparkline : FrameworkElement
 
     protected override void OnRender(DrawingContext drawingContext)
     {
+        try
+        {
+            Render(drawingContext);
+        }
+        catch (Exception exception)
+        {
+            Core.Storage.AppLog.Error("sparkline: render failed", exception);
+        }
+    }
+
+    private void Render(DrawingContext drawingContext)
+    {
         var samples = Samples;
         var width = ActualWidth;
         var height = ActualHeight;

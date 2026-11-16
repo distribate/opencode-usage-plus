@@ -65,6 +65,7 @@ internal sealed class TrayHost : IDisposable
 
     public void Start()
     {
+        AppLog.Info($"tray: start iconStyle={_viewModel.IconStyle}");
         UpdateIcon();
         _notifyIcon.Visible = true;
 
@@ -83,9 +84,10 @@ internal sealed class TrayHost : IDisposable
 
     public void Stop()
     {
+        AppLog.Info("tray: stop");
         _notifyIcon.Visible = false;
         _viewModel.Dispose();
-        _flyout.Close();
+        _flyout.CloseForExit();
     }
 
     public void Dispose()
