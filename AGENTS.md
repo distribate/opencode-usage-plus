@@ -105,6 +105,8 @@ This repo ships a project skill at `.agents/skills/sosumi/SKILL.md` (plus `skill
 - Releases are published exclusively by pushing a tag: `git tag vX.Y.Z && git push origin vX.Y.Z`. The release workflow re-runs lint + tests before building and publishing the dmg.
 - The Windows job in the same release workflow runs **after** the macOS job created the release; it uploads `OpenCodeUsagePlus-windows-x64.zip` with `gh release upload --clobber`. Keep that ordering (`needs:`), otherwise the upload races the release creation.
 - The Windows exe is signed ad-hoc (not at all). Keep `PublishTrimmed=false`; WPF does not support trimming. Keep `IncludeNativeLibrariesForSelfExtract=true` so `e_sqlite3` works from the single file.
+- **Never enable `InvariantGlobalization`** for the Windows projects. WPF resolves `XmlLanguage("en-US")` for every binding and throws "Cannot find non-neutral culture related to 'en-us'" when only the invariant culture exists. It crashes the flyout the moment a binding attaches. Guarded by `GlobalizationTests` and a `runtimeconfig.json` check in CI.
+- The flyout must never be destroyed while the app runs: `Closing` is cancelled and becomes `Hide()`. `Show()` on a closed `Window` throws, which used to leave the tray unusable.
 - Do not rename `%LOCALAPPDATA%\OpenCode Usage Plus` casually: it holds the DPAPI key, history and log.
 - The app is ad-hoc signed on purpose (no paid Developer Program). Do not add entitlements casually — it changes Keychain behavior and Gatekeeper handling.
 - CI runs on `macos-26` GitHub runners (lint → test → build). Keep workflows compatible with that image.
